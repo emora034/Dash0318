@@ -1,147 +1,84 @@
-﻿# -*- coding: utf-8 -*-
-"""
-Created on Wed Mar  4 09:36:11 2020
-
-@author: emora
-"""
-#make sure you install dash from the prompt shell
-#conda install -c conda-forge dash
-#conda install -c conda-forge dash-bootstrap-components
-import dash
-import dash_html_components as html
+﻿import dash
+import dash_table
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
+import dash_html_components as html
+from dash.dependencies import Input, Output, State
 import pandas as pd
-import dash_table
-#read a file
-#df = pd.read_csv('https://forge.scilab.org/index.php/p/rdataset/source/file/master/csv/ggplot2/msleep.csv') 
-df_url = 'https://forge.scilab.org/index.php/p/rdataset/source/file/master/csv/ggplot2/msleep.csv'
-df = pd.read_csv(df_url)
-df_vore = df['vore'].dropna().sort_values().unique()
-opt_vore = [{'label': x + 'vore', 'value': x} for x in df_vore]
+
+external_stylesheets = [dbc.themes.BOOTSTRAP]
 
 #create app
-app=dash.Dash()
-app.title="My App"
-color={"font-color":"blue"}
-#attach an htlm page components
-#add 2 spaces after each reference link
-markdown_text = '''
-#### Some references
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-[Dash Core Components](https://dash.plot.ly/dash-core-components)  
-[Dash HTML Components](https://dash.plot.ly/dash-html-components)  
-[Dash Bootstrap Components](https://dash-bootstrap-components.opensource.faculty.ai/l/components)  
+#read file
+energy=pd.read_csv('https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD')
 
-''' 
-#create a table off the data
-#def generate_table(data, max_rows=5):
- #   return html.Table([
-  #      html.Thead(
-   #             html.Tr(
-    #                [html.Th(i) for i in data.columns]
-     #               )
-      #          ),
-       # html.Tbody(
-        #    [html.Tr(
-         #       [html.Td(col) for col in row.values]
-          #      ) for index, row in data.head(max_rows).iterrows()])
-        #])
-    
+# make a reuseable dropdown for the different examples
+PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
 
 
-#when the app is loaded, the style sheet below will be loaded
-#external_stylesheest=['']
-app=dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.layout= html.Div([
-    #add page title
-    html.H1("My first Dash App!",
-            #change page title color
-            style={"color": "blue"}),
-    #adds the reference links from above
-    dcc.Markdown(markdown_text),
-    html.Div(id='my-div',
-             style={
-                 'background' : 'yellow',
-                 'color' : 'blue'
-             }),
-    #adds plotly, note Montreal has a u so that the plot keeps the accent 
-    dcc.Graph(id="example-graph",
-              figure={"data":[
-                              {"x":[1,2,3], "y":[4,2,1], "type": "bar", "name": "DF"},
-                              {"x":[1,2,3], "y":[2,4,5], "type": "bar", "name": u'Montréal'}
-                              ],
-                  "layout":{"font:":{"color": color["font-color"]}
-                      }
-                      }
+dropdown = dbc.DropdownMenu(
+    children=[
+        dbc.DropdownMenuItem("About"),
+        dbc.DropdownMenuItem("Data Sets"),
+        dbc.DropdownMenuItem(divider=True),
+        dbc.DropdownMenuItem("Generation Capacity"),
+        dbc.DropdownMenuItem("Energy Generated"),
+    ],
+    nav=True,
+    in_navbar=True,
+    label="Menu",
+   
+)
+
+logo = dbc.Navbar(
+    dbc.Container(
+        [
+            html.A(
+                # Use row and col to control vertical alignment of logo / brand
+                dbc.Row(
+                    [
+                        dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
+                        dbc.Col(dbc.NavbarBrand("Renewable Energy In Maryland", className="ml-2")),
+                    ],
+                    align="center",
+                    no_gutters=True,
+                ),
+                href="https://plot.ly",
             ),
-    html.Div([ 
+            dbc.NavbarToggler(id="navbar-toggler"),
+            dbc.Collapse(
+                dbc.Nav(
+                    [dropdown], className="ml-auto", navbar=True
+                ),
+                id="navbar-collapse",
+                navbar=True,
+            ),
+        ]
+    ),
+    color="dark",
+    dark=True,
+    className="mb-5",
+)
 
-                html.Label('Dropdown'), 
-                dcc.Dropdown( 
-                     id='my-dropdown',
-                        options=opt_vore,
-                        value=df_vore[0]
-                ), 
-                html.Label('Multi-Select Dropdown'), 
-                dcc.Dropdown( 
-                    options=[ 
-                        {'label': 'New York City', 'value': 'NYC'}, 
-                        {'label': u'Montréal', 'value': 'MTL'}, 
-                        {'label': 'San Francisco', 'value': 'SF'} 
 
-                    ], 
-                    value=['MTL', 'SF'], 
-                    multi=True 
-                ), 
-                html.Label('Radio Items'), 
-                dcc.RadioItems( 
-                    options=[ 
-                        {'label': 'New York City', 'value': 'NYC'}, 
-                        {'label': u'Montréal', 'value': 'MTL'}, 
-                        {'label': 'San Francisco', 'value': 'SF'} 
-                    ], 
-                    value='MTL' 
-                ), 
-                html.Label('Checkboxes'), 
-                dcc.Checklist( 
-                    options=[ 
-                        {'label': 'New York City', 'value': 'NYC'}, 
-                        {'label': u'Montréal', 'value': 'MTL'}, 
-                        {'label': 'San Francisco', 'value': 'SF'} 
-                    ], 
-                    value=['MTL', 'SF'] 
-                ), 
+#call it into the display of the app
+app.layout=html.Div([
+    logo
+])
 
-                html.Label('Text Input'), 
-                dcc.Input(value='MTL', type='text'), 
+def toggle_navbar_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
-                html.Label('Slider'), 
-                dcc.Slider( 
+app.callback(
+        Output("navbar-collapse", "is_open"),
+        [Input("navbar-toggler", "n_clicks")],
+        [State("navbar-collapse", "is_open")],
+    )(toggle_navbar_collapse)
 
-                    min=0, 
-                    max=9, 
-                    marks={i: 'Label {}'.format(i) if i == 1 else str(i) for i in range(1, 6)}, 
-                    value=5, 
-                ), 
-            ], style={'columnCount': 2}),
-        
-               # generate_table(df),
-                dash_table.DataTable(id='table',
-                                     columns=[{"name":i, "id":i} for i in df.columns],
-                                     #function must read dataset as a dictionary
-                                     data = df.head().to_dict('records')
-                                     )
-                
-    ])
-                
 
-#When you run up to the above tab, the output should come out on an html page
-#from your console, copy and paste the server http address into your broswer. 
-#Mine is: *Running on http://127.0.0.1:8050/ (Press CTRL+C to quit)
-
-#create the module
-if __name__=="__main__":
-    #launch the app on server, add the debug so you can get any errors and solve them directly
-    app.run_server(debug=True)
-    print("hello")
+if __name__ == '__main__':
+    app.run_server(debug=True, port=1627)
