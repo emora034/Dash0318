@@ -14,10 +14,15 @@ app.config.suppress_callback_exceptions = True
 #read file Energy Generated
 energy=pd.read_csv('https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD')
 
+#read file Energy Capacity
 capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD')
 
-#Data Page
+
+########################
+####### Data Page ######
+
 PAGE_SIZE=5
+
 etab=html.Div([
     #description
     dcc.Markdown([
@@ -35,6 +40,7 @@ etab=html.Div([
         dcc.Dropdown(id='data')
     ]),
 
+#ENERGY
     html.Div([dash_table.DataTable(
     id='table-multicol-sorting',
     columns=[
@@ -187,6 +193,7 @@ app.layout=html.Div([
     logo
     ])
 
+# Data Page call back
 @app.callback(
     Output('table-multicol-sorting', "data"),
     [Input('table-multicol-sorting', "page_current"),
@@ -211,7 +218,7 @@ def update_table(page_current, page_size, sort_by):
         page_current*page_size:(page_current+ 1)*page_size
     ].to_dict('records')
 
-
+#Navegation tabs call backs
 @app.callback(Output('tabs-content-classes', 'children'),
               [Input('tabs-with-classes', 'value')])
 def render_content(tab):
