@@ -11,10 +11,69 @@ external_stylesheets = [dbc.themes.BOOTSTRAP]
 #create app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.config.suppress_callback_exceptions = True
-#read file
+#read file Energy Generated
 energy=pd.read_csv('https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD')
 
-# make a reuseable dropdown for the different examples
+capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD')
+
+#Data Page
+PAGE_SIZE=5
+etab=html.Div([
+    #description
+    dcc.Markdown([
+        ('''
+    ## Data
+
+    Please select a dataset
+
+
+    '''), ],
+    style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'color': '#696969', 
+    'align':'center'},),
+
+    html.Div([
+        dcc.Dropdown(id='data')
+    ]),
+
+    html.Div([dash_table.DataTable(
+    id='table-multicol-sorting',
+    columns=[
+        {"name": i, "id": i} for i in energy.columns
+    ],
+    style_table={
+                'maxWidth': '285px',
+                'marginTop': 50,
+                'marginLeft': '180px',
+                'marginRight': '140px',
+                
+                
+    },
+    style_cell={
+        'height': 'auto',
+        'minWidth': '0px', 'maxWidth': '80px',
+        'whiteSpace': 'normal', 'textAlign': 'center'
+    },
+    style_data_conditional=[
+        {
+            'if': {'row_index': 'odd'},
+            'backgroundColor': 'rgb(248, 248, 248)'
+        }
+    ],
+    style_header={
+        'backgroundColor': 'rgb(230, 230, 230)',
+        'fontWeight': 'bold'
+    },
+    page_current=0,
+    page_size=PAGE_SIZE,
+    page_action='custom',
+
+    sort_action='custom',
+    sort_mode='multi',
+    sort_by=[]
+),]),
+])
+
+
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
 
@@ -50,6 +109,8 @@ page_1=html.Div([
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
     'color': '#696969', 'align':'center'}
 )
+
+
 
 #Tab styles
 tabs_styles = {
@@ -121,32 +182,35 @@ logo = html.Div([
             
 ])
 
-#Set home page body
-body=dbc.Container([
-    dbc.Row([
-        dbc.Col([
-                html.H2("Welcome!"),
-                            html.P(
-                                """\
-                                     Renewable energy importance sdkvnsn"""                                   
-                            )
-                        ],
-                        md=4,
-                        ),
-    ])
-])
-
-
 #call it into the display of the app
 app.layout=html.Div([
     logo
     ])
 
-#Navegation
-def toggle_navbar_collapse(n, is_open):
-    if n:
-        return not is_open
-    return is_open
+@app.callback(
+    Output('table-multicol-sorting', "data"),
+    [Input('table-multicol-sorting', "page_current"),
+     Input('table-multicol-sorting', "page_size"),
+     Input('table-multicol-sorting', "sort_by")])
+def update_table(page_current, page_size, sort_by):
+    print(sort_by)
+    if len(sort_by):
+        dff = energy.sort_values(
+            [col['column_id'] for col in sort_by],
+            ascending=[
+                col['direction'] == 'asc'
+                for col in sort_by
+            ],
+            inplace=False
+        )
+    else:
+        # No sort is applied
+        dff = energy
+
+    return dff.iloc[
+        page_current*page_size:(page_current+ 1)*page_size
+    ].to_dict('records')
+
 
 @app.callback(Output('tabs-content-classes', 'children'),
               [Input('tabs-with-classes', 'value')])
@@ -154,9 +218,7 @@ def render_content(tab):
     if tab == 'tab-1':
         return page_1
     elif tab == 'tab-2':
-        return html.Div([
-            html.H3('Tab content 2')
-        ])
+        return etab
     elif tab == 'tab-3':
         return html.Div([
             html.H3('Tab content 3')
