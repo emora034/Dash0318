@@ -13,12 +13,13 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 app.config.suppress_callback_exceptions = True
 #read file Energy Generated
 energy=pd.read_csv('https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD')
+energy=energy.fillna(0)
+energy=energy.drop([energy.index[8], energy.index[9]])
 
 #read file Energy Capacity
 capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD')
-
-
-
+capacity = capacity.fillna(0)
+capacity = capacity.sort_values('Year')
 
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
@@ -195,6 +196,19 @@ etab=html.Div([
 ),]),
 ])
 
+###########################
+### Generation Cap Page ###
+
+gpage= html.Div([
+    dcc.Dropdown( id='captab2',
+    options=[
+        {'label':i, 'value':i} for i in capacity.Year.unique()
+    ], style = dict(
+                    width='40%',
+                    verticalAlign="middle"),
+    placeholder="Make a Selection",
+    multi=True),
+])
 
 #call it into the display of the app
 app.layout=html.Div([
@@ -223,8 +237,6 @@ def update_table(value, page_current, page_size, sort_by):
         else:
             dff = energy
     elif value == 'captab':
-        columns=[
-        {"name": i, "id": i} for i in capacity.columns]
         print(sort_by)
         if len(sort_by):
             dff = capacity.sort_values(
@@ -250,9 +262,7 @@ def render_content(tab):
     elif tab == 'tab-2':
         return etab
     elif tab == 'tab-3':
-        return html.Div([
-            html.H3('Tab content 3')
-        ])
+        return gpage
     elif tab == 'tab-4':
         return html.Div([
             html.H3('Tab content 4')
