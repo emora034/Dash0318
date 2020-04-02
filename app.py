@@ -26,6 +26,7 @@ capacity = capacity.sort_values('Year')
 
 a=pd.DataFrame()
 melt_energy=pd.melt(energy, id_vars=['Year'])
+melt_cap=pd.melt(capacity, id_vars=['Year'])
 f=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)'],
 
 #Logo to be added next to title
@@ -146,7 +147,7 @@ etab=html.Div([
         ('''
     ## Data
 
-    Please select a dataset
+    In this page you can access the datasets. Please use the dropdown menu below to make a selection.
 
 
     '''), ],
@@ -181,6 +182,15 @@ etab=html.Div([
 #### Generated En Page ####
 
 enpage= html.Div([
+    dcc.Markdown([
+                        ('''
+                    #### Make your own Plot!
+                    On this page, you are in charge. Use the dropdown menu below to access the data (by year)
+                    and make your own plot.
+
+
+    '''), ],style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'color': '#696969', 
+    'align':'center'},),
     #multi dropdown year selector for table
     html.Div(children=[
         html.Br(),
@@ -212,6 +222,15 @@ enpage= html.Div([
 #### Capacity En Page ####
 
 gpage= html.Div([
+    dcc.Markdown([
+                        ('''
+                    #### Make your own Plot!
+                    On this page, you are in charge. Use the dropdown menu below to access the data (by year)
+                    and make your own plot.
+
+
+    '''), ],style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'color': '#696969', 
+    'align':'center'},),
     #multi dropdown year selector
     html.Div(children=[
         html.Br(),
@@ -276,7 +295,6 @@ def update_data(dataset):
     elif dataset=='captab':
         return generate_table(capacity)
 
-
 #Capacity page table call back
 @app.callback(
     dash.dependencies.Output('table-container2', "children"),
@@ -286,6 +304,26 @@ def display_table2(dvalue):
         return generate_table(a)
     dff=capacity[capacity['Year'].isin(dvalue)]
     return generate_table(dff)
+
+@app.callback(
+    dash.dependencies.Output('graphcap', 'figure'),
+    [dash.dependencies.Input('captab2', "value")])
+def update_graphen(gvalue):
+    if gvalue is None:
+        dmc=a.copy()
+    else:
+        dmc=melt_cap[melt_cap['Year'].isin(gvalue)]
+    return {
+            'data':[
+                go.Bar(
+                    y= dmc['value'], x=dmc['variable'], 
+                    name='Year'
+                )],
+            'layout': go.Layout(
+                barmode='group',
+                xaxis={'title': 'Energy Source'})
+        }
+
 
 #Generated Energy Table callback
 @app.callback(
