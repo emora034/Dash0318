@@ -5,6 +5,8 @@ import dash_bootstrap_components as dbc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import pandas as pd
+import plotly.graph_objs as go
+import plotly.express as px
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
@@ -22,6 +24,10 @@ capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv
 capacity = capacity.fillna(0)
 capacity = capacity.sort_values('Year')
 
+a=pd.DataFrame()
+melt_energy=pd.melt(energy, id_vars=['Year'])
+f=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)'],
+
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
 
@@ -29,7 +35,8 @@ PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976
 #### About page ####
 page_1=html.Div([
     
-    dcc.Markdown('''
+    dcc.Markdown([
+        ('''
     ## About
 
 
@@ -51,12 +58,12 @@ page_1=html.Div([
     ([Click here to access the U.S. Energy Information Administration page](https://www.eia.gov/electricity/data.php))
                                  
 
-    '''),
-    html.Div(id='page-1-content'),
-    ],
+    ''')],
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
-    'color': '#696969', 'align':'center'}
-)
+    'color': '#696969', 'align':'center'}),
+
+
+])
 
 #Tab styles
 tabs_styles = {
@@ -147,56 +154,34 @@ etab=html.Div([
     'align':'center'},),
 
     html.Div([
-        html.Br(),
-        dcc.Dropdown(id='data-select',
-        options=[
+        html.Div(children=[
+            html.Br(),
+            dcc.Dropdown(id='data-select',
+            options=[
             {'label': 'Energy Generated', 'value':'energytab'},
             {'label': 'Energy Capacity', 'value':'captab'}
-        ], placeholder="Select",
-        )
-    ]),
-
-#ENERGY
-    html.Div([
-        dash_table.DataTable(
-    id='table-multicol-sorting',
-    columns=[],    
-    style_table={
-                'maxWidth': '285px',
-                'marginTop': 50,
-                'marginLeft': '180px',
-                'marginRight': '140px',             
-    },
-    style_cell={
-        'height': 'auto',
-        'minWidth': '0px', 'maxWidth': '80px',
-        'whiteSpace': 'normal', 'textAlign': 'center'
-    },
-    style_data_conditional=[
-        {
-            'if': {'row_index': 'odd'},
-            'backgroundColor': 'rgb(248, 248, 248)'
-        }
-    ],
-    style_header={
-        'backgroundColor': 'rgb(230, 230, 230)',
-        'fontWeight': 'bold'
-    },
-    page_current=0,
-    page_size=PAGE_SIZE,
-    page_action='custom',
-
-    sort_action='custom',
-    sort_mode='multi',
-    sort_by=[]
-),]),
+        ], style= dict(width='60%',
+                    verticalAlign="middle"),
+            placeholder="Select"),
+            html.Br(),
+        html.Div(id='data-sel',
+        style={'width':'85%',
+        'padding':'45px',
+        'marginLeft': '180px',
+        'marginRight': '140px',
+        'textAlign': 'center',
+        'backgroundColor': '#F8F8FF'}
+        )],
+    )]),
 ])
+
+
 
 ###########################
 #### Generated En Page ####
 
 enpage= html.Div([
-    #multi dropdown year selector
+    #multi dropdown year selector for table
     html.Div(children=[
         html.Br(),
         dcc.Dropdown( id='energytab2',
@@ -210,16 +195,16 @@ enpage= html.Div([
                     html.Div(id='table-container',
                     children='EDetails',
                     style={'width':'80%',
-                    'padding':'15px',
+                    'padding':'20px',
                     'marginLeft': '180px',
                 'marginRight': '140px',
                 'textAlign': 'center'}
-                    )]),
+                    )]
+                    
+                    ),
 
-    html.Div([
-        html.Br(),
-        dcc.Graph(id='graph2')
-    ])
+                    html.Div(
+                        dcc.Graph(id='graphen'))
 ])
 
 
@@ -247,10 +232,7 @@ gpage= html.Div([
                 'textAlign': 'center'})
                     ]),
 
-    html.Div([
-        html.Br(),
-        dcc.Graph(id='graph')
-    ])
+        dcc.Graph(id='graphcap')
 ])
 
 
@@ -272,45 +254,6 @@ def render_content(tab):
     elif tab == 'tab-4':
         return enpage
 
-# Data Page call back
-@app.callback(
-    Output('table-multicol-sorting', "data"),
-    [Input('data-select', "value"),
-     Input('table-multicol-sorting', "page_current"),
-     Input('table-multicol-sorting', "page_size"),
-     Input('table-multicol-sorting', "sort_by")])
-def update_table(value, page_current, page_size, sort_by):
-    
-    if value == 'energytab':
-        print(sort_by)
-        if len(sort_by):
-            dff = energy.sort_values(
-            [col['column_id'] for col in sort_by],
-            ascending=[
-                col['direction'] == 'asc'
-                for col in sort_by
-            ],
-            inplace=False
-        )
-        else:
-            dff = energy
-    elif value == 'captab':
-        print(sort_by)
-        if len(sort_by):
-            dff = capacity.sort_values(
-            [col['column_id'] for col in sort_by],
-            ascending=[
-                col['direction'] == 'asc'
-                for col in sort_by
-            ],
-            inplace=False
-        )
-        else:
-            dff=capacity
-    return dff.iloc[
-        page_current*page_size:(page_current+ 1)*page_size
-    ].to_dict('records')
-
 # Table for Capacity and Energy Gen pages:
 def generate_table(dataframe, max_rows=12):
     return html.Table(
@@ -322,9 +265,19 @@ def generate_table(dataframe, max_rows=12):
             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
         ]) for i in range(min(len(dataframe), max_rows))]
     )
+# Data Page call back
+
+@app.callback(
+    dash.dependencies.Output('data-sel', "children"),
+    [dash.dependencies.Input('data-select', "value")])
+def update_data(dataset):
+    if dataset=='energytab':
+        return generate_table(energy)
+    elif dataset=='captab':
+        return generate_table(capacity)
+
 
 #Capacity page table call back
-a=pd.DataFrame()
 @app.callback(
     dash.dependencies.Output('table-container2', "children"),
     [dash.dependencies.Input('captab2',"value")])
@@ -335,7 +288,6 @@ def display_table2(dvalue):
     return generate_table(dff)
 
 #Generated Energy Table callback
-
 @app.callback(
     dash.dependencies.Output('table-container', "children"),
     [dash.dependencies.Input('energytab2',"value")])
@@ -344,6 +296,26 @@ def display_table(ddvalue):
         return generate_table(a)
     dff=energy[energy['Year'].isin(ddvalue)]
     return generate_table(dff)
+
+
+@app.callback(
+    dash.dependencies.Output('graphen', 'figure'),
+    [dash.dependencies.Input('energytab2', "value")])
+def update_graphen(gvalue):
+    if gvalue is None:
+        dm2=a.copy()
+    else:
+        dm2=melt_energy[melt_energy['Year'].isin(gvalue)]
+    return {
+            'data':[
+                go.Bar(
+                    y= dm2['value'], x=dm2['variable'], 
+                    name='Year'
+                )],
+            'layout': go.Layout(
+                barmode='group',
+                xaxis={'title': 'Energy Source'})
+        }
 
 
 if __name__ == '__main__':
