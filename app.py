@@ -15,6 +15,7 @@ app.config.suppress_callback_exceptions = True
 energy=pd.read_csv('https://opendata.maryland.gov/api/views/79zg-5xwz/rows.csv?accessType=DOWNLOAD')
 energy=energy.fillna(0)
 energy=energy.drop([energy.index[8], energy.index[9]])
+energy=energy.sort_values('Year')
 
 #read file Energy Capacity
 capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD')
@@ -24,8 +25,8 @@ capacity = capacity.sort_values('Year')
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
 
-
-#About page
+####################
+#### About page ####
 page_1=html.Div([
     
     dcc.Markdown('''
@@ -56,8 +57,6 @@ page_1=html.Div([
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
     'color': '#696969', 'align':'center'}
 )
-
-
 
 #Tab styles
 tabs_styles = {
@@ -161,15 +160,12 @@ etab=html.Div([
     html.Div([
         dash_table.DataTable(
     id='table-multicol-sorting',
-    columns=[
-        {"name": i, "id": i} for i in energy.columns],    
+    columns=[],    
     style_table={
                 'maxWidth': '285px',
                 'marginTop': 50,
                 'marginLeft': '180px',
-                'marginRight': '140px',
-                
-                
+                'marginRight': '140px',             
     },
     style_cell={
         'height': 'auto',
@@ -197,23 +193,84 @@ etab=html.Div([
 ])
 
 ###########################
-### Generation Cap Page ###
+#### Generated En Page ####
+
+enpage= html.Div([
+    #multi dropdown year selector
+    html.Div(children=[
+        html.Br(),
+        dcc.Dropdown( id='energytab2',
+        options=[
+            {'label':i, 'value':i} for i in energy.Year.unique()
+            ], style = dict(
+                    width='60%',
+                    verticalAlign="middle"),
+                    placeholder="Make a Selection",
+                    multi=True),
+                    html.Div(id='table-container',
+                    children='EDetails',
+                    style={'width':'80%',
+                    'padding':'15px',
+                    'marginLeft': '180px',
+                'marginRight': '140px',
+                'textAlign': 'center'}
+                    )]),
+
+    html.Div([
+        html.Br(),
+        dcc.Graph(id='graph2')
+    ])
+])
+
+
+###########################
+#### Capacity En Page ####
 
 gpage= html.Div([
-    dcc.Dropdown( id='captab2',
-    options=[
-        {'label':i, 'value':i} for i in capacity.Year.unique()
-    ], style = dict(
-                    width='40%',
+    #multi dropdown year selector
+    html.Div(children=[
+        html.Br(),
+        dcc.Dropdown( id='captab2',
+        options=[
+            {'label':i, 'value':i} for i in capacity.Year.unique()
+            ], style = dict(
+                    width='60%',
                     verticalAlign="middle"),
-    placeholder="Make a Selection",
-    multi=True),
+                    placeholder="Make a Selection",
+                    multi=True),
+                    html.Div(id='table-container2',
+                    children='Details',
+                    style={'width':'80%',
+                    'padding':'15px',
+                    'marginLeft': '180px',
+                'marginRight': '140px',
+                'textAlign': 'center'})
+                    ]),
+
+    html.Div([
+        html.Br(),
+        dcc.Graph(id='graph')
+    ])
 ])
+
 
 #call it into the display of the app
 app.layout=html.Div([
     logo
     ])
+
+#Navegation tabs call backs
+@app.callback(Output('tabs-content-classes', 'children'),
+              [Input('tabs-with-classes', 'value')])
+def render_content(tab):
+    if tab == 'tab-1':
+        return page_1
+    elif tab == 'tab-2':
+        return etab
+    elif tab == 'tab-3':
+        return gpage
+    elif tab == 'tab-4':
+        return enpage
 
 # Data Page call back
 @app.callback(
@@ -223,6 +280,7 @@ app.layout=html.Div([
      Input('table-multicol-sorting', "page_size"),
      Input('table-multicol-sorting', "sort_by")])
 def update_table(value, page_current, page_size, sort_by):
+    
     if value == 'energytab':
         print(sort_by)
         if len(sort_by):
@@ -253,20 +311,40 @@ def update_table(value, page_current, page_size, sort_by):
         page_current*page_size:(page_current+ 1)*page_size
     ].to_dict('records')
 
-#Navegation tabs call backs
-@app.callback(Output('tabs-content-classes', 'children'),
-              [Input('tabs-with-classes', 'value')])
-def render_content(tab):
-    if tab == 'tab-1':
-        return page_1
-    elif tab == 'tab-2':
-        return etab
-    elif tab == 'tab-3':
-        return gpage
-    elif tab == 'tab-4':
-        return html.Div([
-            html.H3('Tab content 4')
-        ])
+# Table for Capacity and Energy Gen pages:
+def generate_table(dataframe, max_rows=12):
+    return html.Table(
+        # Header
+        [html.Tr([html.Th(col) for col in dataframe.columns])] +
+
+        # Body
+        [html.Tr([
+            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+        ]) for i in range(min(len(dataframe), max_rows))]
+    )
+
+#Capacity page table call back
+a=pd.DataFrame()
+@app.callback(
+    dash.dependencies.Output('table-container2', "children"),
+    [dash.dependencies.Input('captab2',"value")])
+def display_table2(dvalue):
+    if dvalue is None:
+        return generate_table(a)
+    dff=capacity[capacity['Year'].isin(dvalue)]
+    return generate_table(dff)
+
+#Generated Energy Table callback
+
+@app.callback(
+    dash.dependencies.Output('table-container', "children"),
+    [dash.dependencies.Input('energytab2',"value")])
+def display_table(ddvalue):
+    if ddvalue is None:
+        return generate_table(a)
+    dff=energy[energy['Year'].isin(ddvalue)]
+    return generate_table(dff)
+
 
 if __name__ == '__main__':
     app.run_server(debug=True, port=1627)
