@@ -48,7 +48,12 @@ page_1=html.Div([
      renewable energy credits (RECs) through the PJM Environmental Information Services (EIS) 
      Generation Attributes Tracking System (GATS) (available [here](https://gats.pjm-eis.com/gats2/PublicReports/RenewableGeneratorsRegisteredinGATS)).
 
-    As renewable energy generators are not required to register in GATS, there may be some renewable energy 
+     As you navegate through the app, you will have access to the dataset through the *Data* tab. Then, in the
+     *Generation Capacity* tab, you will be able to access the dataset for the annual estimated renewable energy 
+     generating capacity (2006-2017) and you will be able to create your own put. Likewise, in the *Energy Generated*
+     tab you will access this dataset and generate your own plot.
+     
+     Please note, as renewable energy generators are not required to register in GATS, there may be some renewable energy 
     generation capacity installed in Maryland but not generating RECs that is not captured in this estimate. 
     The second data set describes the amount of energy generated annually by renewable sources 
     in Maryland in megawatt hours (MWh). In addition, there is a column which describes 
@@ -57,12 +62,10 @@ page_1=html.Div([
     (PJM GATS). Total generation comes from the U.S. Energy Information Administration's State 
     Level Generation report, released in October 2016 with revisions in November 2016. 
     ([Click here to access the U.S. Energy Information Administration page](https://www.eia.gov/electricity/data.php))
-                                 
 
     ''')],
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
     'color': '#696969', 'align':'center'}),
-
 
 ])
 
@@ -85,7 +88,7 @@ tab_selected_style = {
     'padding': '6px'
 }
 
-#set-up of title, logo, and dropdown bar.
+#set-up of title, logo, and tabs.
 logo = html.Div([
                 # Use row and col to control vertical alignment of logo / brand
                 dbc.NavbarBrand([
@@ -138,16 +141,22 @@ logo = html.Div([
 
 ########################
 ####### Data Page ######
-
-PAGE_SIZE=10
-
 etab=html.Div([
     #description
     dcc.Markdown([
         ('''
     ## Data
 
-    In this page you can access the datasets. Please use the dropdown menu below to make a selection.
+    Did you know that Maryland ranks 28, among the 50 states, in renewable
+    energy generation? Its largest renewable energy source is Hydroelectric.
+    Maryland's 10-year renewable energy growth is 47.6%, the 16th slowest growth 
+    rate after Idaho. Vermont leads all states with an outstanding 99.6% electricity
+    generated from renewables. If you want to learn more about each State's ranking,
+    and growth, click [here](https://amp.usatoday.com/amp/39801879).
+
+    
+    In this page you can access the Maryland's renewable energy capacity and generation datat. 
+    Please use the dropdown menu below to make a selection. 
 
 
     '''), ],
@@ -185,7 +194,7 @@ enpage= html.Div([
     dcc.Markdown([
                         ('''
                     #### Make your own Plot!
-                    On this page, you are in charge. Use the dropdown menu below to access the data (by year)
+                    Use the dropdown menu below to access the data (by year)
                     and make your own plot.
 
 
