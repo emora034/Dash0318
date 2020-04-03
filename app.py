@@ -356,7 +356,7 @@ def display_table2(dvalue):
 @app.callback(
     dash.dependencies.Output('graphcap', 'figure'),
     [dash.dependencies.Input('captab2', "value")])
-def update_graphen(cvalue):
+def update_grapcap(cvalue):
     if cvalue is None:
         dmc=a.copy()
     else:
