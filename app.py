@@ -28,6 +28,16 @@ a=pd.DataFrame()
 melt_energy=pd.melt(energy, id_vars=['Year'])
 melt_cap=pd.melt(capacity, id_vars=['Year'])
 f=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)'],
+label=['2007','2008','2009','2010','2011', '2012','2013','2014','2015','2016']
+
+fig=go.Figure(data=[
+                go.Bar(name='Renewable', x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)']['value']),
+                go.Bar(name='All Sources', x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from All Sources (MWh)']['value'])  
+                ])
+fig.update_layout(barmode='group',  title_text='Electricity Generation from Renewable Sources')
+fig2=px.bar(f,x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)']['value'], 
+color=label, labels={'x':'Years', 'y':'MWh'})
+fig2.update_layout(title_text='Electricity Generation Comparison')
 
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
@@ -48,11 +58,6 @@ page_1=html.Div([
      renewable energy credits (RECs) through the PJM Environmental Information Services (EIS) 
      Generation Attributes Tracking System (GATS) (available [here](https://gats.pjm-eis.com/gats2/PublicReports/RenewableGeneratorsRegisteredinGATS)).
 
-     As you navegate through the app, you will have access to the dataset through the *Data* tab. Then, in the
-     *Generation Capacity* tab, you will be able to access the dataset for the annual estimated renewable energy 
-     generating capacity (2006-2017) and you will be able to create your own put. Likewise, in the *Energy Generated*
-     tab you will access this dataset and generate your own plot.
-     
      Please note, as renewable energy generators are not required to register in GATS, there may be some renewable energy 
     generation capacity installed in Maryland but not generating RECs that is not captured in this estimate. 
     The second data set describes the amount of energy generated annually by renewable sources 
@@ -63,10 +68,36 @@ page_1=html.Div([
     Level Generation report, released in October 2016 with revisions in November 2016. 
     ([Click here to access the U.S. Energy Information Administration page](https://www.eia.gov/electricity/data.php))
 
+     As you navegate through the app, you will have access to the dataset through the *Data* tab. Then, in the
+     *Generation Capacity* tab, you will be able to access the dataset for the annual estimated renewable energy 
+     generating capacity (2006-2017) and you will be able to create your own put. Likewise, in the *Energy Generated*
+     tab you will access this dataset and generate your own plot.
+
+    ##### Preview
+
+     From the menu below, you may select an analysis. The first plot *Renewable Energy Over the Years* will display the 
+     total electricity generated from all renewable sources over the years in MWh. The second option will portray the total
+     electricity generated in the State of Maryland from all sources in MWh. Both plots will open in a new window for your 
+     convenience.
+     
     ''')],
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
     'color': '#696969', 'align':'center'}),
 
+    html.Div([
+        html.Div(children=[
+            html.Br(),
+            dcc.Dropdown(id='overyears',
+            options=[
+            {'label': 'Renewable Energy Over the Years', 'value':'over'},
+            {'label': 'Renewable vs. All Sources', 'value':'compare'}
+        ], style= dict(width='60%',
+                    verticalAlign="middle"),
+            placeholder="Select"),
+            html.Br(),
+            html.Div(id='over2')
+            ],
+    )])
 ])
 
 #Tab styles
@@ -281,6 +312,13 @@ def render_content(tab):
         return gpage
     elif tab == 'tab-4':
         return enpage
+@app.callback(Output('over2','children'),
+                [Input('overyears', 'value')])
+def graph_sel(tabb):
+    if tabb=='over':
+        fig2.show()
+    elif tabb=='compare':
+        fig.show()
 
 # Table for Capacity and Energy Gen pages:
 def generate_table(dataframe, max_rows=12):
