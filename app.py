@@ -23,6 +23,7 @@ energy=energy.sort_values('Year')
 capacity=pd.read_csv('https://opendata.maryland.gov/api/views/mq84-njxq/rows.csv?accessType=DOWNLOAD')
 capacity = capacity.fillna(0)
 capacity = capacity.sort_values('Year')
+capacity['Year']=capacity['Year'].astype(float)
 
 a=pd.DataFrame()
 melt_energy=pd.melt(energy, id_vars=['Year'])
@@ -355,20 +356,25 @@ def display_table2(dvalue):
 @app.callback(
     dash.dependencies.Output('graphcap', 'figure'),
     [dash.dependencies.Input('captab2', "value")])
-def update_graphen(gvalue):
-    if gvalue is None:
+def update_graphen(cvalue):
+    if cvalue is None:
         dmc=a.copy()
     else:
-        dmc=melt_cap[melt_cap['Year'].isin(gvalue)]
+        dmc=capacity.loc[capacity['Year'].isin(cvalue)]
+        dmc=pd.melt(dmc, id_vars=['Year'])
     return {
-            'data':[
-                go.Bar(
-                    y= dmc['value'], x=dmc['variable'], 
-                    name='Year'
-                )],
-            'layout': go.Layout(
+                'data':[
+                    go.Bar(
+                        x=dmc[dmc['Year']==i]['variable'],
+                        y=dmc[dmc['Year']==i]['value'],
+                        name=i
+                    ) for i in dmc.Year.unique()
+                ],
+                'layout':go.Layout(
                 barmode='group',
-                xaxis={'title': 'Energy Source'})
+                xaxis={'title': 'Energy Source'},
+                yaxis={'title':'Megawatts'})
+            
         }
 
 
@@ -388,18 +394,23 @@ def display_table(ddvalue):
     [dash.dependencies.Input('energytab2', "value")])
 def update_graphen(gvalue):
     if gvalue is None:
-        dm2=a.copy()
+        dm=a.copy()
     else:
-        dm2=melt_energy[melt_energy['Year'].isin(gvalue)]
+        dm=energy.loc[energy['Year'].isin(gvalue)]
+        dm=pd.melt(dm, id_vars=['Year'])
     return {
-            'data':[
-                go.Bar(
-                    y= dm2['value'], x=dm2['variable'], 
-                    name='Year'
-                )],
-            'layout': go.Layout(
+                'data':[
+                    go.Bar(
+                        x=dm[dm['Year']==i]['variable'],
+                        y=dm[dm['Year']==i]['value'],
+                        name=i
+                    ) for i in dm.Year.unique()
+                ],
+                'layout':go.Layout(
                 barmode='group',
-                xaxis={'title': 'Energy Source'})
+                xaxis={'title': 'Energy Source'},
+                yaxis={'title':'Megawatts Hours'})
+            
         }
 
 
