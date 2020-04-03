@@ -35,10 +35,10 @@ fig=go.Figure(data=[
                 go.Bar(name='Renewable', x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)']['value']),
                 go.Bar(name='All Sources', x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from All Sources (MWh)']['value'])  
                 ])
-fig.update_layout(barmode='group',  title_text='Electricity Generation from Renewable Sources')
+fig.update_layout(barmode='group',  title_text='Electricity Generation Comparison')
 fig2=px.bar(f,x=label, y=melt_energy[melt_energy['variable']=='Electricity Generation from Renewable Sources (MWh)']['value'], 
 color=label, labels={'x':'Years', 'y':'MWh'})
-fig2.update_layout(title_text='Electricity Generation Comparison')
+fig2.update_layout(title_text='Electricity Generation from Renewable Sources (MWh)')
 
 #Logo to be added next to title
 PLOTLY_LOGO="https://pics.clipartpng.com/midle/Renewable_Energy_PNG_Clipart-2976.png"
@@ -71,15 +71,14 @@ page_1=html.Div([
 
      As you navegate through the app, you will have access to the dataset through the *Data* tab. Then, in the
      *Generation Capacity* tab, you will be able to access the dataset for the annual estimated renewable energy 
-     generating capacity (2006-2017) and you will be able to create your own put. Likewise, in the *Energy Generated*
+     generating capacity (2006-2017) and you will be able to create your own plot. Likewise, in the *Energy Generated*
      tab you will access this dataset and generate your own plot.
 
     ##### Preview
 
      From the menu below, you may select an analysis. The first plot *Renewable Energy Over the Years* will display the 
      total electricity generated from all renewable sources over the years in MWh. The second option will portray the total
-     electricity generated in the State of Maryland from all sources in MWh. Both plots will open in a new window for your 
-     convenience.
+     electricity generated in the State of Maryland from all sources in MWh. Both plots will open in a new window.
      
     ''')],
     style={'marginLeft': 70, 'marginRight': 90, 'marginTop': 10, 'marginBottom': 10,
@@ -93,7 +92,8 @@ page_1=html.Div([
             {'label': 'Renewable Energy Over the Years', 'value':'over'},
             {'label': 'Renewable vs. All Sources', 'value':'compare'}
         ], style= dict(width='60%',
-                    verticalAlign="middle"),
+                    verticalAlign="middle",
+                    marginLeft=60),
             placeholder="Select"),
             html.Br(),
             html.Div(id='over2')
@@ -200,8 +200,8 @@ etab=html.Div([
             html.Br(),
             dcc.Dropdown(id='data-select',
             options=[
-            {'label': 'Energy Generated', 'value':'energytab'},
-            {'label': 'Energy Capacity', 'value':'captab'}
+            {'label': 'Renewable Energy Generated (2007-2017)', 'value':'energytab'},
+            {'label': 'Renewable Energy Generation Capacity (2006-2017)', 'value':'captab'}
         ], style= dict(width='60%',
                     verticalAlign="middle"),
             placeholder="Select"),
@@ -211,12 +211,12 @@ etab=html.Div([
         'padding':'45px',
         'marginLeft': '180px',
         'marginRight': '140px',
-        'textAlign': 'center',
-        'backgroundColor': '#F8F8FF'}
+        'textAlign': 'center'
+        },
+        
         )],
     )]),
 ])
-
 
 
 ###########################
