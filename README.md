@@ -1,10 +1,3 @@
-##### Master in Statistics for Data Science
-##### Data Tyding & Reporting
-##### 2020
-##### Elianne Mora
-##### GitHub Repository Url: https://github.com/emora034/Dash_App
-
-
 # Renewable Energy
 
 Although renewable energy has become increasingly more popular and accessible, it still represents a very low portion of the overall energy generated and consumed in Maryland - from the datasets extracted, it can be observed that all together, the renewable energy sources represent less than 10% of the energy generated in the State.
